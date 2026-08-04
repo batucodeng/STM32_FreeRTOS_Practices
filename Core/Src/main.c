@@ -19,8 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include <stdio.h>
-#include <stdint.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -48,6 +47,8 @@ osThreadId defaultTaskHandle;
 osThreadId Task_LEDHandle;
 osThreadId myTask03Handle;
 osThreadId Task_UARTHandle;
+osThreadId Task_LED2Handle;
+osThreadId Task_UART2Handle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -60,6 +61,8 @@ void StartDefaultTask(void const * argument);
 void TaskLED(void const * argument);
 void StartTask03(void const * argument);
 void TaskUART(void const * argument);
+void TaskLEDLow(void const * argument);
+void TaskUARTHigh(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -136,6 +139,14 @@ int main(void)
   /* definition and creation of Task_UART */
   osThreadDef(Task_UART, TaskUART, osPriorityNormal, 0, 128);
   Task_UARTHandle = osThreadCreate(osThread(Task_UART), NULL);
+
+  /* definition and creation of Task_LED2 */
+  osThreadDef(Task_LED2, TaskLEDLow, osPriorityLow, 0, 128);
+  Task_LED2Handle = osThreadCreate(osThread(Task_LED2), NULL);
+
+  /* definition and creation of Task_UART2 */
+  osThreadDef(Task_UART2, TaskUARTHigh, osPriorityHigh, 0, 128);
+  Task_UART2Handle = osThreadCreate(osThread(Task_UART2), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -339,6 +350,48 @@ void TaskUART(void const * argument)
   vTaskDelay(pdMS_TO_TICKS(1000));
   }
   /* USER CODE END TaskUART */
+}
+
+/* USER CODE BEGIN Header_TaskLEDLow */
+/**
+* @brief Function implementing the Task_LED2 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_TaskLEDLow */
+void TaskLEDLow(void const * argument)
+{
+  /* USER CODE BEGIN TaskLEDLow */
+  /* Infinite loop */
+  for(;;)
+  {
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+  /* USER CODE END TaskLEDLow */
+}
+
+/* USER CODE BEGIN Header_TaskUARTHigh */
+/**
+* @brief Function implementing the Task_UART2 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_TaskUARTHigh */
+void TaskUARTHigh(void const * argument)
+{
+  /* USER CODE BEGIN TaskUARTHigh */
+  /* Infinite loop */
+	uint32_t sayac2 = 0;
+	char buffer2[50];
+  for(;;)
+  {
+	  sayac2++;
+	  int uzunluk2 = sprintf(buffer2, "Putty mesaj geliyo %lu\r\n", sayac2);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk2, 100);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+  /* USER CODE END TaskUARTHigh */
 }
 
 /**
