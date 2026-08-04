@@ -42,16 +42,24 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart2;
+
 osThreadId defaultTaskHandle;
 osThreadId Task_LEDHandle;
+osThreadId myTask03Handle;
+osThreadId Task_UARTHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void const * argument);
 void TaskLED(void const * argument);
+void StartTask03(void const * argument);
+void TaskUART(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -90,6 +98,8 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -118,6 +128,14 @@ int main(void)
   /* definition and creation of Task_LED */
   osThreadDef(Task_LED, TaskLED, osPriorityAboveNormal, 0, 128);
   Task_LEDHandle = osThreadCreate(osThread(Task_LED), NULL);
+
+  /* definition and creation of myTask03 */
+  osThreadDef(myTask03, StartTask03, osPriorityIdle, 0, 128);
+  myTask03Handle = osThreadCreate(osThread(myTask03), NULL);
+
+  /* definition and creation of Task_UART */
+  osThreadDef(Task_UART, TaskUART, osPriorityNormal, 0, 128);
+  Task_UARTHandle = osThreadCreate(osThread(Task_UART), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -180,6 +198,67 @@ void SystemClock_Config(void)
   }
 }
 
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
+}
+
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
@@ -215,9 +294,51 @@ void TaskLED(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
   /* USER CODE END TaskLED */
+}
+
+/* USER CODE BEGIN Header_StartTask03 */
+/**
+* @brief Function implementing the myTask03 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTask03 */
+void StartTask03(void const * argument)
+{
+  /* USER CODE BEGIN StartTask03 */
+  /* Infinite loop */
+  for(;;)
+  {
+
+  }
+  /* USER CODE END StartTask03 */
+}
+
+/* USER CODE BEGIN Header_TaskUART */
+/**
+* @brief Function implementing the Task_UART thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_TaskUART */
+void TaskUART(void const * argument)
+{
+  /* USER CODE BEGIN TaskUART */
+  /* Infinite loop */
+	uint32_t sayac=0;
+	char buffer[50];
+  for(;;)
+  {
+	sayac++;
+  int uzunluk = sprintf(buffer, "UART Taski calisiyor putty orda mısın %lu\r\n", sayac);
+  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, uzunluk, 100);
+  vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+  /* USER CODE END TaskUART */
 }
 
 /**
