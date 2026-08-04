@@ -1,0 +1,42 @@
+# STM32 FreeRTOS Practices
+
+Bu proje, STM32F446RE (Nucleo-F446RE) geliştirme kartı üzerinde SAF FreeRTOS C API'leri kullanarak geliştirdiğim pratik çalışmaları ve RTOS mimari uygulamalarını içerir.
+
+---
+
+## Donanım ve Yazılım Gereksinimleri
+
+Geliştirme Kartım: STM32F446RE (Nucleo-64)
+IDE: STM32CubeIDE
+Kütüphane: STM32Cube HAL & FreeRTOS
+Kullandığım Terminaller: PuTTY / Tera Term (Serial Baud Rate: 115200)
+
+---
+
+##  Uygulanan Görevler (Tasks)
+
+ projenin gelişim aşamaları ve içerdiği Task'lar:
+
+### 1. Task_LED (Tekli LED Yanıp Sönme)
+Açıklama: Saf C FreeRTOS API'si (vTaskDelay) kullanılarak oluşturulan ilk görev. 
+Çalışma Mantığı: On-board LED'i (PA5) 500 ms aralıklarla toggle eder.
+
+### 2. Task_UART (Periyodik Serial Loglama)
+Açıklama: Seri port üzerinden bilgisayara periyodik olarak canlı durum logu gönderir.
+Çalışma Mantığı: sprintf ve HAL_UART_Transmit kullanılarak her 1 saniyede bir sayaç değerini PuTTY terminaline basar.
+
+---
+
+##  Proje Yapısı
+
+Core/Src/main.c: RTOS Task tanımlamaları ve ana döngü kodları.
+Core/Inc/: Başlık dosyaları.
+Middlewares/Third_Party/FreeRTOS/: FreeRTOS çekirdek dosyaları.
+
+---
+
+## Nasıl Çalıştırılır?
+
+1. Bu depoyu klonlayın veya indirin:
+   ```bash
+   git clone [https://github.com/batucodeng/STM32_FreeRTOS_Practices.git](https://github.com/batucodeng/STM32_FreeRTOS_Practices.git)
