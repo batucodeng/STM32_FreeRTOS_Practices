@@ -20,9 +20,11 @@
 #include "main.h"
 #include "cmsis_os.h"
 
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "stdint.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -387,9 +389,24 @@ void TaskUARTHigh(void const * argument)
   for(;;)
   {
 	  sayac2++;
-	  int uzunluk2 = sprintf(buffer2, "Putty mesaj geliyo %lu\r\n", sayac2);
+	  if(sayac2 % 5 == 0)
+	  {
+		  if((sayac2/5) % 2 != 0)
+		  {
+			  vTaskPrioritySet(Task_LED2Handle, osPriorityHigh);
+			  int uzunluk = sprintf(buffer2, "Led High %lu \r\n", sayac2);
+			  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk, 100);
+		  }
+		  else
+		  {
+			  vTaskPrioritySet(Task_LED2Handle, osPriorityLow);
+			  int uzunluk = sprintf(buffer2, "LED Low %lu \r\n", sayac2);
+			  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk, 100);
+		  }
+	  }
+	  int uzunluk2 = sprintf(buffer2, "UART Taski %lu \r\n", sayac2);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk2, 100);
-    vTaskDelay(pdMS_TO_TICKS(1000));
+	  vTaskDelay(pdMS_TO_TICKS(1000));
   }
   /* USER CODE END TaskUARTHigh */
 }
