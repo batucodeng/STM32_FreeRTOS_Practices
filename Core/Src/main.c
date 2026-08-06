@@ -392,7 +392,6 @@ void TaskUARTHigh(void const * argument)
 	char buffer2[60];
   for(;;)
   {
-	  alinanSayac++;
 	  if(xQueueReceive(QueueHandle, &alinanSayac, portMAX_DELAY)==pdPASS)
 	  {
 	  int uzunluk2 = sprintf(buffer2, "UART Taski %lu \r\n", alinanSayac);
