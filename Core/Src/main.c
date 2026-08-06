@@ -52,7 +52,7 @@ osThreadId Task_UARTHandle;
 osThreadId Task_LED2Handle;
 osThreadId Task_UART2Handle;
 /* USER CODE BEGIN PV */
-
+QueueHandle_t QueueHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -123,6 +123,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+  QueueHandle = xQueueCreate(5, sizeof(uint32_t));
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -365,8 +366,11 @@ void TaskLEDLow(void const * argument)
 {
   /* USER CODE BEGIN TaskLEDLow */
   /* Infinite loop */
+	uint32_t gonderilecekSayac;
   for(;;)
   {
+	  gonderilecekSayac++;
+	  xQueueSend(QueueHandle, &gonderilecekSayac, pdMS_TO_TICKS(100));
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
     vTaskDelay(pdMS_TO_TICKS(500));
   }
@@ -384,30 +388,18 @@ void TaskUARTHigh(void const * argument)
 {
   /* USER CODE BEGIN TaskUARTHigh */
   /* Infinite loop */
-	uint32_t sayac2 = 0;
-	char buffer2[50];
+	uint32_t alinanSayac = 0;
+	char buffer2[60];
   for(;;)
   {
-	  sayac2++;
-	  if(sayac2 % 5 == 0)
+	  alinanSayac++;
+	  if(xQueueReceive(QueueHandle, &alinanSayac, portMAX_DELAY)==pdPASS)
 	  {
-		  if((sayac2/5) % 2 != 0)
-		  {
-			  vTaskPrioritySet(Task_LED2Handle, osPriorityHigh);
-			  int uzunluk = sprintf(buffer2, "Led High %lu \r\n", sayac2);
-			  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk, 100);
-		  }
-		  else
-		  {
-			  vTaskPrioritySet(Task_LED2Handle, osPriorityLow);
-			  int uzunluk = sprintf(buffer2, "LED Low %lu \r\n", sayac2);
-			  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk, 100);
-		  }
-	  }
-	  int uzunluk2 = sprintf(buffer2, "UART Taski %lu \r\n", sayac2);
+	  int uzunluk2 = sprintf(buffer2, "UART Taski %lu \r\n", alinanSayac);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk2, 100);
-	  vTaskDelay(pdMS_TO_TICKS(1000));
   }
+  }
+
   /* USER CODE END TaskUARTHigh */
 }
 
