@@ -34,6 +34,11 @@ Açıklama: İplik güvenli veri aktarımı amacıyla Saf FreeRTOS C APIleri ile
 Üretici (Producer - TaskLEDLow): Sayacı her 500 ms'de 1 artırır LED durumunu değiştirir ve veriyi xQueueSend ile kuyruğa kopyalar.
 Tüketici (Consumer - TaskUARTHigh): xQueueReceive fonksiyonunda portMAX_DELAY parametresi ile kuyruğa yeni veri düşene kadar işlemciyi meşgul etmeden BLOCKED durumunda bekler. Veri geldiği an uyanarak seri port üzerinden bilgisayara aktarır.
 
+### 5. İkili Semafor (Binary Semaphore) ile Görev Senkronizasyonu
+Açıklama: Tasklar arasında olay tetikleme ve hızlı senkronizasyon sağlamak amacıyla xSemaphoreCreateBinary, xSemaphoreGive ve xSemaphoreTake API'leri entegre ettim.
+Tetikleyici Görev: Periyotlarla sistem alarm durumunu simüle eder. Alarm oluştuğunda global systemStatus_t yapısını günceller ve xSemaphoreGive ile semafor sinyali salar.
+İşleyici Görev: Semafor gelene kadar işlemciyi yormadan blocked bekler. Semafor salındığı an anında uyanarak güncel alarm verilerini UART (PuTTY) terminaline basar.
+
 ---
 
 ##  Proje Yapısı
