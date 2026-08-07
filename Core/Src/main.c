@@ -29,7 +29,12 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef struct
+{
+int16_t avisX;
+int16_t avisY;
+int16_t avisZ;
+} Datalar;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -123,7 +128,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
-  QueueHandle = xQueueCreate(5, sizeof(uint32_t));
+  QueueHandle = xQueueCreate(5, sizeof(Datalar));
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -366,11 +371,15 @@ void TaskLEDLow(void const * argument)
 {
   /* USER CODE BEGIN TaskLEDLow */
   /* Infinite loop */
-	uint32_t gonderilecekSayac;
+	Datalar sensorData;
+	sensorData.avisX = 100;
+	sensorData.avisY = -50;
+	sensorData.avisZ = 980;
   for(;;)
   {
-	  gonderilecekSayac++;
-	  xQueueSend(QueueHandle, &gonderilecekSayac, pdMS_TO_TICKS(100));
+	  sensorData.avisX += 5;
+	  sensorData.avisY += 2;
+	  xQueueSend(QueueHandle, &sensorData, pdMS_TO_TICKS(100));
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
     vTaskDelay(pdMS_TO_TICKS(500));
   }
@@ -388,14 +397,14 @@ void TaskUARTHigh(void const * argument)
 {
   /* USER CODE BEGIN TaskUARTHigh */
   /* Infinite loop */
-	uint32_t alinanSayac = 0;
-	char buffer2[60];
+	Datalar gelenData;
+	char buffer[100];
   for(;;)
   {
-	  if(xQueueReceive(QueueHandle, &alinanSayac, portMAX_DELAY)==pdPASS)
+	  if(xQueueReceive(QueueHandle, &gelenData, portMAX_DELAY)==pdPASS)
 	  {
-	  int uzunluk2 = sprintf(buffer2, "UART Taski %lu \r\n", alinanSayac);
-	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer2, uzunluk2, 100);
+	  int uzunluk = sprintf(buffer, "X: %d - Y: %d - Z: %d \r\n", gelenData.avisX, gelenData.avisY, gelenData.avisZ);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, uzunluk, 100);
   }
   }
 
