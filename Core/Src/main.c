@@ -25,16 +25,17 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "stdint.h"
+#include "semphr.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 typedef struct
 {
-int16_t avisX;
-int16_t avisY;
-int16_t avisZ;
-} Datalar;
+int16_t alarmActive;
+int16_t errorCode;
+int16_t eventCount;
+} systemStatus_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -58,6 +59,8 @@ osThreadId Task_LED2Handle;
 osThreadId Task_UART2Handle;
 /* USER CODE BEGIN PV */
 QueueHandle_t QueueHandle;
+SemaphoreHandle_t AlarmSemHandle;
+systemStatus_t g_systemStatus;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -120,6 +123,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
+  AlarmSemHandle = xSemaphoreCreateBinary();
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -128,7 +132,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
-  QueueHandle = xQueueCreate(5, sizeof(Datalar));
+  QueueHandle = xQueueCreate(5, sizeof(systemStatus_t));
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -371,15 +375,18 @@ void TaskLEDLow(void const * argument)
 {
   /* USER CODE BEGIN TaskLEDLow */
   /* Infinite loop */
-	Datalar sensorData;
-	sensorData.avisX = 100;
-	sensorData.avisY = -50;
-	sensorData.avisZ = 980;
+	uint32_t donguSayac = 0;
   for(;;)
   {
-	  sensorData.avisX += 5;
-	  sensorData.avisY += 2;
-	  xQueueSend(QueueHandle, &sensorData, pdMS_TO_TICKS(100));
+	  donguSayac++;
+	  if(donguSayac % 3 == 0)
+	  {
+		  g_systemStatus.alarmActive = 1;
+		  g_systemStatus.errorCode = 504;
+		  g_systemStatus.eventCount = donguSayac;
+		  xSemaphoreGive(AlarmSemHandle);
+	  }
+
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
     vTaskDelay(pdMS_TO_TICKS(500));
   }
@@ -397,13 +404,12 @@ void TaskUARTHigh(void const * argument)
 {
   /* USER CODE BEGIN TaskUARTHigh */
   /* Infinite loop */
-	Datalar gelenData;
 	char buffer[100];
   for(;;)
   {
-	  if(xQueueReceive(QueueHandle, &gelenData, portMAX_DELAY)==pdPASS)
+	  if(xSemaphoreTake(AlarmSemHandle, portMAX_DELAY)==pdTRUE)
 	  {
-	  int uzunluk = sprintf(buffer, "X: %d - Y: %d - Z: %d \r\n", gelenData.avisX, gelenData.avisY, gelenData.avisZ);
+	  int uzunluk = sprintf(buffer, "ALARM %lu - Hata kodu:%d - Durum:%s\r\n", g_systemStatus.eventCount, g_systemStatus.errorCode, g_systemStatus.alarmActive ? "Acil" : "Normal");
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, uzunluk, 100);
   }
   }
